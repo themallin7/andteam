@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>&team 멤버 정렬 게임</title>
+
+  <style>
+    body {
+      font-family: '돋움', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      text-align: center;
+    }
+
+    #mainTable {
+      font-size: 14px;
+      width: 95%;
+      max-width: 410px;
+      margin: 0 auto;
+      border-collapse: separate;
+      border-spacing: 10px 5px;
+    }
+
+    #leftField, #rightField {
+      width: 45%;
+      min-height: 150px;
+      border: 1px solid #000;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+
+    .middleField {
+      width: 100%;
+      height: 70px;
+      border: 1px solid #000;
+      margin: 5px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    img {
+      width: 100px;
+      height: auto;
+      margin-bottom: 5px;
+    }
+
+    table.result-table {
+      width: 90%;
+      max-width: 300px;
+      font-size: 13px;
+      line-height: 1.4;
+      margin: 20px auto;
+      border: 1px solid #000;
+      border-collapse: collapse;
+    }
+
+    table.result-table th, table.result-table td {
+      border: 1px solid #000;
+      padding: 5px;
+    }
+
+    table.result-table th {
+      background-color: #000;
+      color: #fff;
+    }
+  </style>
+
+  <script>
+    var namMember = [
+      { name: "니콜라스", img: "https://via.placeholder.com/100" },
+      { name: "의주", img: "https://via.placeholder.com/100" },
+      { name: "하루아", img: "https://via.placeholder.com/100" },
+      { name: "타키", img: "https://via.placeholder.com/100" },
+      { name: "유마", img: "https://via.placeholder.com/100" },
+      { name: "마키", img: "https://via.placeholder.com/100" },
+      { name: "후마", img: "https://via.placeholder.com/100" },
+      { name: "죠", img: "https://via.placeholder.com/100" },
+      { name: "케이", img: "https://via.placeholder.com/100" }
+    ];
+
+    var lstMember = [], parent = [], equal = [], rec = [];
+    var cmp1, cmp2, head1, head2, nrec;
+    var numQuestion, totalSize, finishSize, finishFlag;
+
+    function initList() {
+      let n = 0;
+      lstMember[n] = [];
+      for (let i = 0; i < namMember.length; i++) {
+        lstMember[n][i] = i;
+      }
+      parent[n] = -1;
+      totalSize = 0;
+      n++;
+
+      for (let i = 0; i < lstMember.length; i++) {
+        if (lstMember[i].length >= 2) {
+          let mid = Math.ceil(lstMember[i].length / 2);
+          lstMember[n] = lstMember[i].slice(0, mid);
+          totalSize += lstMember[n].length;
+          parent[n++] = i;
+          lstMember[n] = lstMember[i].slice(mid);
+          totalSize += lstMember[n].length;
+          parent[n++] = i;
+        }
+      }
+
+      for (let i = 0; i < namMember.length; i++) rec[i] = 0;
+      for (let i = 0; i <= namMember.length; i++) equal[i] = -1;
+
+      cmp1 = lstMember.length - 2;
+      cmp2 = lstMember.length - 1;
+      head1 = head2 = nrec = finishSize = 0;
+      finishFlag = 0;
+      numQuestion = 1;
+    }
+
+    function sortList(flag) {
+      if (flag < 0) pushList(cmp1, head1++);
+      else if (flag > 0) pushList(cmp2, head2++);
+      else {
+        pushList(cmp1, head1++);
+        equal[rec[nrec - 1]] = lstMember[cmp2][head2];
+        pushList(cmp2, head2++);
+      }
+
+      if (head1 < lstMember[cmp1].length && head2 === lstMember[cmp2].length)
+        copyRemaining(cmp1, head1);
+      else if (head1 === lstMember[cmp1].length && head2 < lstMember[cmp2].length)
+        copyRemaining(cmp2, head2);
+
+      if (head1 === lstMember[cmp1].length && head2 === lstMember[cmp2].length) {
+        for (let i = 0; i < lstMember[cmp1].length + lstMember[cmp2].length; i++) {
+          lstMember[parent[cmp1]][i] = rec[i];
+        }
+        lstMember.pop();
+        lstMember.pop();
+        cmp1 -= 2;
+        cmp2 -= 2;
+        head1 = head2 = nrec = 0;
+      }
+
+      if (cmp1 < 0) {
+        document.getElementById("battleNumber").innerHTML = 
+          `Battle No. ${numQuestion - 1}<br>${Math.floor(finishSize * 100 / totalSize)}% 정렬 완료`;
+        showResult();
+        finishFlag = 1;
+      } else {
+        showImage();
+      }
+    }
+
+    function pushList(cmp, head) {
+      rec[nrec++] = lstMember[cmp][head];
+      finishSize++;
+      while (equal[rec[nrec - 1]] !== -1) {
+        rec[nrec++] = equal[rec[nrec - 1]];
+        finishSize++;
+      }
+    }
+
+    function copyRemaining(cmp, head) {
+      while (head < lstMember[cmp].length) {
+        rec[nrec++] = lstMember[cmp][head++];
+        finishSize++;
+      }
+    }
+
+    function showResult() {
+      let ranking = 1, sameRank = 1, str = "";
+      str += "<table class='result-table'><tr><th>순위</th><th>이름</th></tr>";
+      for (let i = 0; i < namMember.length; i++) {
+        let id = lstMember[0][i];
+        str += `<tr><td>${ranking}</td><td><img src="${namMember[id].img}"><br>${namMember[id].name}</td></tr>`;
+        if (i < namMember.length - 1) {
+          if (equal[lstMember[0][i]] === lstMember[0][i + 1]) sameRank++;
+          else { ranking += sameRank; sameRank = 1; }
+        }
+      }
+      str += "</table>";
+      document.getElementById("resultField").innerHTML = str;
+    }
+
+    function showImage() {
+      document.getElementById("battleNumber").innerHTML = 
+        `Battle No. ${numQuestion}<br>${Math.floor(finishSize * 100 / totalSize)}% 정렬 중`;
+
+      const left = namMember[lstMember[cmp1][head1]];
+      const right = namMember[lstMember[cmp2][head2]];
+
+      document.getElementById("leftField").innerHTML = `<img src="${left.img}"><br>${left.name}`;
+      document.getElementById("rightField").innerHTML = `<img src="${right.img}"><br>${right.name}`;
+      numQuestion++;
+    }
+
+    window.onload = function () {
+      initList();
+      showImage();
+    };
+  </script>
+</head>
+<body>
+  <table id="mainTable">
+    <tr>
+      <td id="battleNumber" colspan="3" style="padding-bottom: 10px;"><p>&nbsp;</p></td>
+    </tr>
+    <tr>
+      <td id="leftField" onclick="if(finishFlag==0)sortList(-1);" rowspan="2"></td>
+      <td class="middleField" onclick="if(finishFlag==0)sortList(0);">둘 다 좋다</td>
+      <td id="rightField" onclick="if(finishFlag==0)sortList(1);" rowspan="2"></td>
+    </tr>
+    <tr>
+      <td class="middleField" onclick="if(finishFlag==0)sortList(0);">모르겠다</td>
+    </tr>
+  </table>
+
+  <div id="resultField">
+    <p style="font-size:13px;">닉룽 화이팅</p>
+    <p style="font-size:13px;">성공하자</p>
+  </div>
+</body>
+</html>
